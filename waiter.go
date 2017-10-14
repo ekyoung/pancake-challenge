@@ -1,54 +1,55 @@
 package main
 
 func calcFlips(pancakes []bool) int {
-	i := 0
-	for j := len(pancakes) - 1; j >= 0; j-- {
-		if !pancakes[j] {
-			i = j + 1
-			break
-		}
-	}
+	//Happy pancakes on the bottom are good.
+	//Find the bottom most blank pancake and work on making it happy
+	numPancakesToWorkOn := findNumOfBottomMostBlank(pancakes)
 
-	//fmt.Printf("Top %v of %v pancakes are mixed.\n", i, len(pancakes))
-
-	if i == 0 {
+	if numPancakesToWorkOn == 0 {
 		return 0
 	}
 
-	remainingPancakes := pancakes[:i]
+	numFlips := 0
 
-	numFlips := setupTop(remainingPancakes)
-	flip(remainingPancakes, i)
+	//Any happy pancakes on top will become blank when we flip
+	//so first need to flip them to blank
+	numHappy := findNumHappyPancakesOnTop(pancakes)
+	if numHappy > 0 {
+		flip(pancakes, numHappy)
+		numFlips++
+	}
+
+	//The blank pancakes on top will replace the blank pancake
+	//that was deeper in the stack with a happy pancake
+	flip(pancakes, numPancakesToWorkOn)
 	numFlips++
 
-	return numFlips + calcFlips(pancakes[:i])
+	//Repeat the process excluding the pancakes that are known
+	//to be happy
+	return numFlips + calcFlips(pancakes[:numPancakesToWorkOn-numHappy])
 }
 
-func setupTop(pancakes []bool) int {
-	//fmt.Printf("Setting up top %v pancakes.\n", len(pancakes))
-
-	numHappy := 0
-	for i := 0; i < len(pancakes); i++ {
+func findNumOfBottomMostBlank(pancakes []bool) int {
+	for i := len(pancakes) - 1; i >= 0; i-- {
 		if !pancakes[i] {
-			numHappy = i
-			break
+			return i + 1
 		}
 	}
 
-	if numHappy == 0 {
-		//fmt.Println("No pancakes need to be set up.")
-		return 0
+	return 0
+}
+
+func findNumHappyPancakesOnTop(pancakes []bool) int {
+	for i := 0; i < len(pancakes); i++ {
+		if !pancakes[i] {
+			return i
+		}
 	}
 
-	//fmt.Printf("%v pancakes need to be set up.\n", numHappy)
-	flip(pancakes, numHappy)
-
-	return 1
+	return len(pancakes)
 }
 
 func flip(pancakes []bool, top int) {
-	//fmt.Printf("Flipping %v of %v pancakes.\n", top, len(pancakes))
-
 	newState := make([]bool, top)
 
 	for i := 0; i < top; i++ {
